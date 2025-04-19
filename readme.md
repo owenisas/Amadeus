@@ -1,4 +1,4 @@
-# Setting Up Salieri AI
+# Setting Up Amadeus AI
 
 ---
 
