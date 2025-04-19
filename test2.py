@@ -511,8 +511,9 @@ Prompt = "You are on facebook marketplace, ask for 30% off of the listing price 
 i = 1
 os.environ["API_KEY"] = xAI
 from agent.action_agent import ActionAgent
-
-action_agent = ActionAgent(tools_map=tools_map, tools_definition=tools_definition, message=Stock_Prompt)
+from audio import listen
+user_request = listen()
+action_agent = ActionAgent(tools_map=tools_map, tools_definition=tools_definition, message=user_request)
 # note: save previous experience of clicking buttons
 while Task:
     time.sleep(0.5)
