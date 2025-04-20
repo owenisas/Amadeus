@@ -512,18 +512,20 @@ def set_latest(msg):
 # ------------------------------
 # 5. Function Calling Workflow
 # ------------------------------
+Test_Prompt = "open facebook and make a post on mental health"
 Stock_Prompt = "Check the stock price of Tesla"
 Prompt = ("You are on facebook marketplace, "
-          "ask for 30% off of the listing price for every item if the item is an electronic. "
+          "ask for 30% off of the listing price for every item if the item is what I am looking for."
           "you should move on to the next listing after messaging one."
-          "you should also check if you have messaged the same item before.")
+          "you should also check if you have messaged the same item before."
+          "list of items I am looking for:Apple Products(IPad, IPhone, Macbook), PCs, herman miller chairs")
 i = 1
 os.environ["API_KEY"] = xAI
 from agent.main_agent import ActionAgent
-
-user_request = listen()
+# user_request = listen()
+# print(user_request)
 action_agent = ActionAgent(
-    tools_map=tools_map, tools_definition=tools_definition, message=user_request, on_new_message=set_latest)
+    tools_map=tools_map, tools_definition=tools_definition, message=Prompt, on_new_message=set_latest)
 # note: save previous experience of clicking buttons
 while Task:
     time.sleep(0.5)

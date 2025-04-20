@@ -60,7 +60,6 @@ def transcribe_with_groq(wav_path: str):
             temperature=0.0
         )
     # Print the full JSON or just the text:
-    print(json.dumps(transcription, indent=2, default=str))
     # If you only want the text:
     # print(transcription["text"])
     return transcription.text
@@ -73,7 +72,6 @@ def read(text):
         input=text,
         response_format="wav"
     )
-    print(response)
     audio_bytes = response.parse()  # contains the complete WAV payload
     wav_buffer = io.BytesIO(audio_bytes)
     wav_buffer.seek(0)

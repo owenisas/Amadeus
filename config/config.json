@@ -5,10 +5,6 @@
         "deviceName": "Android",
         "noReset": true
     },
-    "api_keys": {
-        "open_router_API": "YOUR_OPENROUTER_API_KEY",
-        "xAI": "YOUR_XAI_API_KEY"
-    },
     "filter": [
         "Current Balance",
         "Five Surveys",
