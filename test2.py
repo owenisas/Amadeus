@@ -11,7 +11,7 @@ from appium.webdriver.common.appiumby import AppiumBy
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.pointer_input import PointerInput
 from selenium.webdriver.support.ui import WebDriverWait
-import tools
+from audio import listen, read
 import xml.etree.ElementTree as ET
 import re
 import itertools
@@ -19,6 +19,7 @@ from agent.information_agent import call_agent
 import base64
 
 from load_env import xAI
+
 # ------------------------------
 # 1. Set Up Appium Environment
 # ------------------------------
@@ -268,10 +269,6 @@ def edit_textbox_tool(text: str):
     return solve.edit_any_textbox(text)
 
 
-def quit_tool():
-    quit()
-
-
 def open_app(app: str):
     driver.activate_app(app)
 
@@ -317,7 +314,8 @@ def go_back():
 
 
 def end_session():
-    global Task
+    global Task, latest_message
+    read(latest_message)
     Task = False
 
 
@@ -498,6 +496,14 @@ tools_map = {
     "go_back": go_back,
     "end_session": end_session
 }
+
+
+def set_latest(msg):
+    """Update the latest_message before tool execution."""
+    global latest_message
+    latest_message = msg
+
+
 # ------------------------------
 # 4. Set Up xAI (Grok) API Client
 # ------------------------------
@@ -507,13 +513,17 @@ tools_map = {
 # 5. Function Calling Workflow
 # ------------------------------
 Stock_Prompt = "Check the stock price of Tesla"
-Prompt = "You are on facebook marketplace, ask for 30% off of the listing price for every item if the item is an electronic. you should move on to the next listing after messaging one. you should also check if you have messaged the same item before."
+Prompt = ("You are on facebook marketplace, "
+          "ask for 30% off of the listing price for every item if the item is an electronic. "
+          "you should move on to the next listing after messaging one."
+          "you should also check if you have messaged the same item before.")
 i = 1
 os.environ["API_KEY"] = xAI
-from agent.action_agent import ActionAgent
-from audio import listen
+from agent.main_agent import ActionAgent
+
 user_request = listen()
-action_agent = ActionAgent(tools_map=tools_map, tools_definition=tools_definition, message=user_request)
+action_agent = ActionAgent(
+    tools_map=tools_map, tools_definition=tools_definition, message=user_request, on_new_message=set_latest)
 # note: save previous experience of clicking buttons
 while Task:
     time.sleep(0.5)

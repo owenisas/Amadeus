@@ -2,7 +2,7 @@ import time
 import os
 import json
 
-from agent.action_agent import ActionAgent
+from agent.main_agent import ActionAgent
 from lib.driver_manager import create_driver
 from lib.ui_interaction import UIInteraction
 from lib.history import History

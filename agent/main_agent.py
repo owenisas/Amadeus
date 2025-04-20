@@ -2,7 +2,7 @@ from client import Client
 
 
 class ActionAgent:
-    def __init__(self, tools_map, tools_definition, message):
+    def __init__(self, tools_map, tools_definition, message, on_new_message: callable = None):
         self.messages = [
             {
                 "role": "system",
@@ -54,8 +54,9 @@ class ActionAgent:
                              base="https://api.x.ai/v1",
                              tools_map=tools_map,
                              tools_definition=tools_definition,
-                             messages=self.messages
+                             messages=self.messages,
+                             on_new_message=on_new_message
                              )
 
     def chat(self):
-        self.client.chat()
+        return self.client.chat()
