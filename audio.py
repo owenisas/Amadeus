@@ -3,16 +3,15 @@ import struct
 import wave
 import tempfile
 import time
-import json
 import io
 import pvporcupine
 import pyaudio
 from groq import Groq
-from load_env import groq_API
+from load_env import groq_API, pvporcupine
 
 porcupine = pvporcupine.create(keywords=["Hello Amadeus"],
-                               access_key="i3W5DeAIpYHnRS1oJKbNF0deoMBTwVtK/wwhnC2XN0KNAM2yeuhYFg=="
-                               , keyword_paths=["Hello-Amadeus.ppn"])
+                               access_key=pvporcupine,
+                               keyword_paths=["Hello-Amadeus.ppn"])
 
 # Start audio stream
 pa = pyaudio.PyAudio()
