@@ -7,10 +7,10 @@ import io
 import pvporcupine
 import pyaudio
 from groq import Groq
-from load_env import groq_API, pvporcupine
+from load_env import groq_API, pvporcupine_API
 
 porcupine = pvporcupine.create(keywords=["Hello Amadeus"],
-                               access_key=pvporcupine,
+                               access_key=pvporcupine_API,
                                keyword_paths=["Hello-Amadeus.ppn"])
 
 # Start audio stream

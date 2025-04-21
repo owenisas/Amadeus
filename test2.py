@@ -3,7 +3,7 @@ import os
 import time
 
 from openai import OpenAI
-
+from selenium.common.exceptions import TimeoutException
 from history import History
 from appium import webdriver
 from appium.options.android import UiAutomator2Options
@@ -17,6 +17,8 @@ import re
 import itertools
 from agent.information_agent import call_agent
 import base64
+from ML.data import log_click_csv
+import asyncio
 
 from load_env import xAI
 
@@ -51,6 +53,12 @@ counter = [0]
 with open("filter.json", "r") as fp:
     filters = json.load(fp)
 
+dynamic_page_source = None
+prev_page_source = None
+task_progress = None
+current_target = None
+opened_app = None
+
 
 def image_bytes_to_data_url(image_bytes, mime_type="image/png"):
     """
@@ -60,11 +68,28 @@ def image_bytes_to_data_url(image_bytes, mime_type="image/png"):
     return f"data:{mime_type};base64,{base64_encoded}"
 
 
+train_ele = []
 temp_list = []
 # Get the screen dimensions.
 window_size = driver.get_window_size()
 screen_width = window_size["width"]
 screen_height = window_size["height"]
+
+
+async def _wait_for_source_change(driver, before_src, timeout):
+    loop = asyncio.get_running_loop()
+
+    def condition():
+        return driver.page_source != before_src
+
+    try:
+        await loop.run_in_executor(
+            None,
+            lambda: WebDriverWait(driver, timeout).until(lambda d: d.page_source != before_src)
+        )
+        return True
+    except TimeoutException:
+        return False
 
 
 # ------------------------------
@@ -78,7 +103,10 @@ class Solver:
         self.answer_option = None
         self.continue_button = None
 
-    def get_display_elements(self):
+    def get_display_elements(self, target, progress):
+        global current_target, task_progress
+        current_target = target
+        task_progress = progress
         elements = get_truly_visible_elements()
         temp_list.extend(elements)
         return elements
@@ -87,6 +115,8 @@ class Solver:
         element_data = next((el for el in temp_list if el["index"] == index), None)
         if element_data is None:
             # Return an error message instead of raising an error.
+            log_click_csv(app_name=opened_app, element=train_ele[index], outcome="failure", task=current_target,
+                          task_progress=task_progress)
             return {"status": "failure", "message": f"click failed with index {index}"}
 
         # For logging purposes, get the text of the element.
@@ -117,6 +147,12 @@ class Solver:
         # Execute the action.
         actions.perform()
         temp_list.clear()
+        if dynamic_page_source != prev_page_source:
+            log_click_csv(app_name=opened_app, element=train_ele[index], outcome="failure", task=current_target,
+                          task_progress=task_progress)
+        else:
+            log_click_csv(app_name=opened_app, element=train_ele[index], outcome="success", task=current_target,
+                          task_progress=task_progress)
         return {"clicked_index": index, "clicked_text": selected_text}
 
     def edit_any_textbox(self, new_text: str):
@@ -184,7 +220,8 @@ def search_elements_xml(element, counter, filters, screen_width, screen_height, 
         }
         visible_elems.append(info)
         counter[0] += 1
-
+        global train_ele
+        train_ele.append(element)
     # Recurse into the element's children.
     for child in list(element):
         search_elements_xml(child, counter, filters, screen_width, screen_height, visible_elems)
@@ -192,6 +229,9 @@ def search_elements_xml(element, counter, filters, screen_width, screen_height, 
 
 def get_truly_visible_elements():
     # Retrieve and parse the dynamic page source as an XML.
+    global dynamic_page_source
+    global prev_page_source
+    prev_page_source = dynamic_page_source
     dynamic_page_source = driver.page_source
     root = ET.fromstring(dynamic_page_source)
 
@@ -217,8 +257,8 @@ def get_apps():
     return clean_packages
 
 
-def get_display_elements_tool():
-    return solve.get_display_elements()
+def get_display_elements_tool(target, progress):
+    return solve.get_display_elements(target=target, progress=progress)
 
 
 def click_element_tool(index: int):
@@ -270,6 +310,8 @@ def edit_textbox_tool(text: str):
 
 
 def open_app(app: str):
+    global opened_app
+    opened_app = app
     driver.activate_app(app)
 
 
@@ -330,8 +372,17 @@ tools_definition = [
             "description": "Retrieve all text elements on the screen along with their indexes",
             "parameters": {
                 "type": "object",
-                "properties": {},
-                "required": []
+                "properties": {
+                    "target": {
+                        "type": "string",
+                        "description": "Describe the target of the element you are looking for(button, checkbox, etc.)"
+                    },
+                    "progress": {
+                        "type": "boolean",
+                        "description": "Whether or not the task is having progress compared to the last display elements."
+                    }
+                },
+                "required": ["progress"]
             }
         }
     },
@@ -522,10 +573,11 @@ Prompt = ("You are on facebook marketplace, "
 i = 1
 os.environ["API_KEY"] = xAI
 from agent.main_agent import ActionAgent
+
 # user_request = listen()
 # print(user_request)
 action_agent = ActionAgent(
-    tools_map=tools_map, tools_definition=tools_definition, message=Prompt, on_new_message=set_latest)
+    tools_map=tools_map, tools_definition=tools_definition, message=Stock_Prompt, on_new_message=set_latest)
 # note: save previous experience of clicking buttons
 while Task:
     time.sleep(0.5)
