@@ -148,10 +148,10 @@ class Solver:
         actions.perform()
         temp_list.clear()
         if dynamic_page_source != prev_page_source:
-            log_click_csv(app_name=opened_app, element=train_ele[index], outcome="failure", task=current_target,
+            log_click_csv(app_name=opened_app, element=train_ele[index], outcome="success", task=current_target,
                           task_progress=task_progress)
         else:
-            log_click_csv(app_name=opened_app, element=train_ele[index], outcome="success", task=current_target,
+            log_click_csv(app_name=opened_app, element=train_ele[index], outcome="failure", task=current_target,
                           task_progress=task_progress)
         return {"clicked_index": index, "clicked_text": selected_text}
 

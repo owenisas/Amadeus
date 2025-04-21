@@ -4,7 +4,7 @@ import asyncio
 import aiofiles
 from aiocsv import AsyncWriter
 import re
-
+import os
 # Generate one run_id for this entire session
 RUN_ID = str(uuid.uuid4())
 
@@ -77,13 +77,18 @@ def log_click_csv(app_name, task, element, outcome, task_progress):
     """
     Append a single CSV row (including run_id).
     """
+    if not os.path.exists(CSV_PATH):
+        with open(CSV_PATH, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+
     bounds_str = element.attrib.get('bounds', '[0,0][0,0]')
     x, y, width, height = parse_bounds(bounds_str)
     row = {
         "run_id": RUN_ID,
         "app_name": app_name,
         "target": task,
-        "text": element.text,
+        "text": element.attrib.get("text", ""),
         "checkable": element.attrib.get("checkable"),
         "checked": element.attrib.get("checked"),
         "clickable": element.attrib.get("clickable"),
@@ -92,7 +97,7 @@ def log_click_csv(app_name, task, element, outcome, task_progress):
         "focused": element.attrib.get("focused"),
         "selected": element.attrib.get("selected"),
         "displayed": element.attrib.get("displayed"),
-        "class": element.attrib.get("className"),
+        "class": element.attrib.get("class", ""),
         "x": x, "y": y,
         "width": width, "height": height,
         "outcome": outcome,
