@@ -1,7 +1,7 @@
 from openai import OpenAI
 import os
 from tools.tools import Tool
-
+from load_env import xAI
 
 class Client:
     def __init__(
@@ -14,7 +14,7 @@ class Client:
             on_new_message: callable = None
     ):
         self.client = OpenAI(
-            api_key=os.environ['API_KEY'],
+            api_key=xAI,
             base_url=base
         )
         self.model = model
@@ -28,7 +28,8 @@ class Client:
             model=self.model,
             messages=self.messages,
             tools=self.tools.definition,
-            tool_choice="auto"
+            tool_choice="auto",
+            temperature=0.6
         )
         print(response)
         if not response or not response.choices:
