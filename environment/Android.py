@@ -49,6 +49,9 @@ class Android:
         self.temp_ele_list = []
         self.actions = ActionBuilder(self.driver, mouse=PointerInput("touch", "touch"))
         self.current_app = ''
+        self.class_filters = ["android.widget.FrameLayout", "android.view.ViewGroup","android.widget.LinearLayout",
+                              "androidx.recyclerview.widget.RecyclerView",
+                              "android.widget.HorizontalScrollView", "android.widget.ProgressBar"]
 
     def search_elements(self, element, counter, filters):
         # Get the element text from the attribute, and trim any whitespace.
@@ -61,8 +64,11 @@ class Android:
                 for child in list(element):
                     self.search_elements(child, counter, filters)
                 return
-
-        # Extract the bounds from the element's "bounds" attribute.
+        element_class = element.attrib.get("class", "")
+        # if element_class in self.class_filters:
+        #     for child in list(element):
+        #         self.search_elements(child, counter, filters)
+        #     return
         bounds_attr = element.attrib.get("bounds", "")
         left, top, right, bottom = parse_bounds(bounds_attr)
 
@@ -76,8 +82,8 @@ class Android:
             bounds_str = f"[{left},{top}][{right},{bottom}]"
             info = {
                 "index": counter[0],
-                "text": element.attrib.get("text", ""),
-                "class": element.attrib.get("class", ""),
+                "text": element_text,
+                "class": element_class,
                 "bounds": bounds_str,
             }
             self.temp_ele_list.append(info)

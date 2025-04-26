@@ -3,7 +3,7 @@ import time
 from agent.main_agent import ActionAgent
 
 
-class Runner:
+class Runner():
     def __init__(self, audio: bool = False, train: bool = False, multi_agent: bool = False, infinite: bool = False,
                  interactive: bool = False, filters: dict = None):
         self.latest_msg = ''
@@ -22,15 +22,15 @@ class Runner:
             user_request = listen()
             print(user_request)
             agent = ActionAgent(on_new_message=self.set_latest_message, multi_agent=self.multi_agent,
-                                message=user_request)
+                                message=user_request, interactive=self.interactive, audio=self.audio)
         else:
             agent = ActionAgent(on_new_message=self.set_latest_message, multi_agent=self.multi_agent,
-                                message=init_prompt)
+                                message=init_prompt, interactive=self.interactive)
         i = 1
         while agent.task:
-            time.sleep(0.5)
+            time.sleep(0.9)
             print(f"Response{i}:")
-            agent.chat()
+            response = agent.chat()
             i += 1
         if self.audio:
             from audio import read

@@ -29,7 +29,7 @@ class Client:
             messages=self.messages,
             tools=self.tools.definition,
             tool_choice="auto",
-            temperature=0.6
+            temperature=0.6,
         )
         print(response)
         if not response or not response.choices:

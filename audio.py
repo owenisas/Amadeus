@@ -13,34 +13,22 @@ porcupine = pvporcupine.create(keywords=["Hello Amadeus"],
                                access_key=pvporcupine_win_API,
                                keyword_paths=["Hello-Amadeus_win.ppn"])
 
-# Start audio stream
-pa = pyaudio.PyAudio()
-stream = pa.open(
-    rate=porcupine.sample_rate,
-    channels=1,
-    format=pyaudio.paInt16,
-    input=True,
-    frames_per_buffer=porcupine.frame_length
-)
 # Initialize Groq client
 client = Groq(api_key=groq_API)
 
 
-def record_to_wav(duration_s: float, sample_rate: int, channels: int = 1) -> str:
-    """Record `duration_s` seconds from `stream` into a temp WAV file and return its path."""
+def record_to_wav(pa, stream, duration_s, channels=1):
     fd, path = tempfile.mkstemp(suffix=".wav")
-    os.close(fd)  # we’ll re‑open via wave
+    os.close(fd)
     wf = wave.open(path, 'wb')
     wf.setnchannels(channels)
     wf.setsampwidth(pa.get_sample_size(pyaudio.paInt16))
-    wf.setframerate(sample_rate)
+    wf.setframerate(porcupine.sample_rate)
 
     frames = []
-    deadline = time.time() + duration_s
-    while time.time() < deadline:
-        data = stream.read(porcupine.frame_length, exception_on_overflow=False)
-        frames.append(data)
-
+    end = time.time() + duration_s
+    while time.time() < end:
+        frames.append(stream.read(porcupine.frame_length))
     wf.writeframes(b''.join(frames))
     wf.close()
     return path
@@ -102,15 +90,33 @@ def read(text):
     return response
 
 
+def start_stream():
+    pa = pyaudio.PyAudio()
+    try:
+        stream = pa.open(
+            rate=porcupine.sample_rate,
+            channels=1,
+            format=pyaudio.paInt16,
+            input=True,
+            frames_per_buffer=porcupine.frame_length,
+            # you can optionally pick a specific device here
+        )
+        return pa, stream
+    except Exception:
+        pa.terminate()
+        raise
+
+
 def listen():
     print("Listening for wake word...")
+    pa, stream = start_stream()
     try:
         while True:
             pcm = stream.read(porcupine.frame_length, exception_on_overflow=False)
             pcm_unpacked = struct.unpack_from("h" * porcupine.frame_length, pcm)
             if porcupine.process(pcm_unpacked) >= 0:
                 print("[Wake word detected] Recording 5 seconds...")
-                wav_path = record_to_wav(duration_s=5.0, sample_rate=porcupine.sample_rate)
+                wav_path = record_to_wav(stream=stream, duration_s=5.0)
                 print("Transcribing with Groq…")
                 transcribe = transcribe_with_groq(wav_path)
                 os.remove(wav_path)

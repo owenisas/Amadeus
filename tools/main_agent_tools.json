@@ -77,23 +77,6 @@
     {
         "type": "function",
         "function": {
-            "name": "call_agent",
-            "description": "calls an agent that can answer informational questions, you should ask whenever you need an answer to a question",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "message": {
-                        "type": "string",
-                        "description": "questions that needs to be answered"
-                    }
-                },
-                "required": ["message"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
             "name": "open_app",
             "description": "Opens an app with the app name, has to run get_app before running this function.",
             "parameters": {
@@ -137,18 +120,6 @@
         "function": {
             "name": "go_back",
             "description": "Navigate back to the previous screen.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": []
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "end_session",
-            "description": "end the session when the task is complete.",
             "parameters": {
                 "type": "object",
                 "properties": {},
