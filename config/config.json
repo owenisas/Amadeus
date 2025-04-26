@@ -1,0 +1,18 @@
+{
+    "appium": {
+        "platformName": "Android",
+        "automationName": "UiAutomator2",
+        "deviceName": "Android",
+        "noReset": true
+    },
+    "filter": [
+        "Current Balance",
+        "Five Surveys",
+        "$ 5.00 USD",
+        "Surveys",
+        "Offers",
+        "Games",
+        "More",
+        "Claim Reward"
+    ]
+}

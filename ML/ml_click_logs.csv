@@ -1,0 +1,3 @@
+run_id,app_name,target,text,checkable,checked,clickable,enabled,focusable,focused,selected,displayed,class,x,y,width,height,outcome,task_progress
+fac050b3-1bff-4f11-b455-cd9043289815,com.yahoo.mobile.client.android.finance,search bar or stock lookup,TSLA,false,false,false,true,false,false,false,true,,132,403,532,45,success,True
+ff152cea-8241-4aa9-af44-211e13ce4301,com.yahoo.mobile.client.android.finance,search bar or stock lookup,TSLA,false,false,false,true,false,false,false,true,,132,403,452,45,success,True
