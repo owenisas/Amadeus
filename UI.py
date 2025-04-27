@@ -52,7 +52,7 @@ class CancelableRunner(Runner):
             prompt = None
             counter = 1
             while not self.stop_requested and getattr(self.agent, 'task', False):
-                time.sleep(0.5)
+                time.sleep(1)
                 logger.info(f"Response {counter}:")
                 response = self.agent.chat()
                 logger.info(response)

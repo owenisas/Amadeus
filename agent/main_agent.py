@@ -83,6 +83,7 @@ class ActionAgent():
             "scroll_up": self.env.scroll_up,
             "scroll_down": self.env.scroll_down,
             "go_back": self.env.go_back,
+            "press_enter": self.env.press_enter
         }
         self.filters = filters
         self.tool_definition = tools_definition()
@@ -150,7 +151,8 @@ class ActionAgent():
 
     def user_interaction(self):
         if self.audio:
-            from audio import record_to_wav, transcribe_with_groq, start_stream
+            from audio import record_to_wav, transcribe_with_groq, start_stream, read
+            read(self.messages[-1].content)
             pa, stream = start_stream()
             wav_path = record_to_wav(duration_s=5.0, stream=stream, pa=pa)
             print("Transcribing with Groq…")

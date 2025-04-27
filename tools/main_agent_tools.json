@@ -77,6 +77,18 @@
     {
         "type": "function",
         "function": {
+            "name": "press_enter",
+            "description": "press enter on the device, should be used after entering text in textbox",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "open_app",
             "description": "Opens an app with the app name, has to run get_app before running this function.",
             "parameters": {

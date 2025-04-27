@@ -8,5 +8,8 @@
         "Games",
         "More",
         "Claim Reward"
-    ]
+    ],
+    "class_filter": ["android.widget.FrameLayout", "android.view.ViewGroup","android.widget.LinearLayout",
+                              "androidx.recyclerview.widget.RecyclerView",
+                              "android.widget.HorizontalScrollView", "android.widget.ProgressBar", "hierarchy"]
 }

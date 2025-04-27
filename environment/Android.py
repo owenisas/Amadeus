@@ -1,6 +1,9 @@
+import time
+
 from appium import webdriver
 from appium.options.android import UiAutomator2Options
 from appium.webdriver.common.appiumby import AppiumBy
+from selenium.webdriver import Keys
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.pointer_input import PointerInput
 
@@ -49,26 +52,26 @@ class Android:
         self.temp_ele_list = []
         self.actions = ActionBuilder(self.driver, mouse=PointerInput("touch", "touch"))
         self.current_app = ''
-        self.class_filters = ["android.widget.FrameLayout", "android.view.ViewGroup","android.widget.LinearLayout",
-                              "androidx.recyclerview.widget.RecyclerView",
-                              "android.widget.HorizontalScrollView", "android.widget.ProgressBar"]
 
     def search_elements(self, element, counter, filters):
         # Get the element text from the attribute, and trim any whitespace.
         element_text = element.attrib.get("text", "").strip()
+        element_class = element.attrib.get("class", "")
+        content_desc = element.attrib.get("content-desc", "").strip()
 
         # Check if the element should be filtered out.
-        if filters is not None:
-            if element_text in filters.get("filter", []):
-                # Even if filtered out, continue to process its children.
-                for child in list(element):
-                    self.search_elements(child, counter, filters)
-                return
-        element_class = element.attrib.get("class", "")
-        # if element_class in self.class_filters:
-        #     for child in list(element):
-        #         self.search_elements(child, counter, filters)
-        #     return
+        filters = filters or {"filter": [], "class_filter": []}                                     # :contentReference[oaicite:3]{index=3}
+        if element_text in filters.get("filter", []):                                               # :contentReference[oaicite:4]{index=4}
+            for child in list(element):
+                self.search_elements(child, counter, filters)
+            return
+
+        # 4) Class filter: skip element but recurse children
+        if element_class in filters.get("class_filter", []):                                        # :contentReference[oaicite:5]{index=5}
+            for child in list(element):
+                self.search_elements(child, counter, filters)
+            return
+
         bounds_attr = element.attrib.get("bounds", "")
         left, top, right, bottom = parse_bounds(bounds_attr)
 
@@ -85,14 +88,22 @@ class Android:
                 "text": element_text,
                 "class": element_class,
                 "bounds": bounds_str,
+                "content_desc": content_desc
             }
-            self.temp_ele_list.append(info)
+            # 8) Remove any keys whose value is empty or falsey
+            clean_info = {
+                k: v
+                for k, v in info.items()
+                if v or k == "index"
+            }
+            self.temp_ele_list.append(clean_info)
             counter[0] += 1
         # Recurse into the element's children.
         for child in list(element):
             self.search_elements(child, counter, filters)
 
     def get_display_elements(self, filters=None):
+        self.temp_ele_list = []
         page_source = self.driver.page_source
         root = ET.fromstring(page_source)
         counter = [0]
@@ -105,8 +116,10 @@ class Android:
             return {"status": "failure", "message": f"click failed with index {index}"}
 
         # For logging purposes, get the text of the element.
-        selected_text = element_data["text"]
-
+        if "text" in element_data:
+            selected_text = element_data["text"]
+        else:
+            selected_text = ""
         # Parse the "bounds" string (expected format: "[x1,y1][x2,y2]") to calculate center.
         bounds_str = element_data.get("bounds", "")
         matches = re.findall(r'\[(\d+),(\d+)\]', bounds_str)
@@ -144,12 +157,17 @@ class Android:
             current_text = edit_box.text
             print("Textbox found. Current text:", current_text)
             edit_box.clear()
+            edit_box.click()
             edit_box.send_keys(text)
             print("New text entered into the textbox:", text)
             return {"status": "success", "new_text": text}
         except Exception as e:
             print("An error occurred while editing the textbox:", e)
             return {"status": "error", "error": str(e)}
+
+    def press_enter(self):
+        self.driver.press_keycode(66)
+
 
     def end_driver(self):
         self.driver.quit()
@@ -171,8 +189,8 @@ class Android:
 
     def scroll_down(self):
         start_x = self.screen_width // 2
-        start_y = self.screen_height // 2
-        end_y = int(self.screen_height * (0.1 / 2))
+        start_y = self.screen_height // 1.55
+        end_y = int(self.screen_height * (0.3 / 2))
         self.swipe(start_x, start_y, start_x, end_y)
 
     def scroll_up(self):
@@ -201,3 +219,8 @@ class Android:
 
     def screenshot(self):
         return self.driver.get_screenshot_as_png()
+
+if __name__ == "__main__":
+    test = Android()
+    test.edit_any_textbox("test")
+    test.end_driver()

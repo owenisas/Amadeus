@@ -116,7 +116,7 @@ def listen():
             pcm_unpacked = struct.unpack_from("h" * porcupine.frame_length, pcm)
             if porcupine.process(pcm_unpacked) >= 0:
                 print("[Wake word detected] Recording 5 seconds...")
-                wav_path = record_to_wav(stream=stream, duration_s=5.0)
+                wav_path = record_to_wav(stream=stream, duration_s=5.0, pa=pa)
                 print("Transcribing with Groq…")
                 transcribe = transcribe_with_groq(wav_path)
                 os.remove(wav_path)
