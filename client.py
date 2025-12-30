@@ -1,36 +1,54 @@
 from openai import OpenAI
 import os
 from tools.tools import Tool
-from load_env import xAI
+from config import APIConfig, AgentConfig
+
 
 class Client:
     def __init__(
             self,
-            model: str,
-            base: str,
-            tools_map: dict,
-            tools_definition: list,
-            messages: list,
-            on_new_message: callable = None
+            model: str = None,
+            base: str = None,
+            tools_map: dict = None,
+            tools_definition: list = None,
+            messages: list = None,
+            on_new_message: callable = None,
+            api_key: str = None,
+            temperature: float = None
     ):
+        # Use provided values or fall back to config defaults
+        key = api_key or APIConfig.get_api_key()
+        base_url = base or APIConfig.get_base_url()
+
         self.client = OpenAI(
-            api_key=xAI,
-            base_url=base
+            api_key=key,
+            base_url=base_url
         )
         self.model = model
-        self.messages = messages
-        self.tools = Tool(tools_map, tools_definition, self.messages)
+        self.messages = messages or []
+        self.temperature = temperature or AgentConfig.TEMPERATURE
+
+        if tools_map and tools_definition:
+            self.tools = Tool(tools_map, tools_definition, self.messages)
+        else:
+            self.tools = None
+
         # Optional callback to update latest_message before tool execution
         self._on_new_message = on_new_message
 
     def chat(self):
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=self.messages,
-            tools=self.tools.definition,
-            tool_choice="auto",
-            temperature=0.6,
-        )
+        kwargs = {
+            "model": self.model,
+            "messages": self.messages,
+            "temperature": self.temperature,
+        }
+
+        # Only include tools if they exist
+        if self.tools:
+            kwargs["tools"] = self.tools.definition
+            kwargs["tool_choice"] = "auto"
+
+        response = self.client.chat.completions.create(**kwargs)
         print(response)
         if not response or not response.choices:
             print("No choices returned. Possibly refusal or error.")
@@ -47,7 +65,8 @@ class Client:
             print(content)
 
         # Now dispatch any tool calls (e.g., end_session) after the latest_message is set
-        self.tools.tool_call(message)
+        if self.tools:
+            self.tools.tool_call(message)
 
         # Persist conversation for debugging
         with open("messages.txt", "w", encoding="utf-8") as f:

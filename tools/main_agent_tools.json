@@ -2,11 +2,16 @@
     {
         "type": "function",
         "function": {
-            "name": "get_display_elements",
-            "description": "Retrieve all text elements on the screen along with their indexes",
+            "name": "get_screen_elements",
+            "description": "Retrieve all interactive UI elements on the current screen. Returns a list of elements with their index, text, content description, class type, and bounds. Use this to understand what's on screen before taking action.",
             "parameters": {
                 "type": "object",
-                "properties": {},
+                "properties": {
+                    "include_all": {
+                        "type": "boolean",
+                        "description": "If true, include all elements including non-interactive ones. Default is false (only interactive elements)."
+                    }
+                },
                 "required": []
             }
         }
@@ -14,31 +19,36 @@
     {
         "type": "function",
         "function": {
-            "name": "get_screenshot",
-            "description": "Retrieve a description of the screenshot of the device",
+            "name": "analyze_screen",
+            "description": "Get a visual analysis of the current screen using vision AI. Use this when you need to understand visual elements that aren't captured in the UI tree (images, icons, layout understanding).",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "text": {
+                    "question": {
                         "type": "string",
-                        "description": "Describe what description you need, be specific."
+                        "description": "Specific question about the screen content. Be precise: 'What app is currently open?', 'Is there a login button visible?', 'What color is the submit button?'"
+                    },
+                    "focus_area": {
+                        "type": "string",
+                        "enum": ["full_screen", "top", "bottom", "center", "left", "right"],
+                        "description": "Which area of the screen to focus on. Default is full_screen."
                     }
                 },
-                "required": ["text"]
+                "required": ["question"]
             }
         }
     },
     {
         "type": "function",
         "function": {
-            "name": "click",
-            "description": "Click on the element at the specified index.",
+            "name": "tap",
+            "description": "Tap on a UI element by its index from get_screen_elements. This is the primary way to interact with buttons, links, and clickable items.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "index": {
                         "type": "integer",
-                        "description": "Index of the element to click."
+                        "description": "Index of the element to tap (from get_screen_elements result)."
                     }
                 },
                 "required": ["index"]
@@ -48,11 +58,49 @@
     {
         "type": "function",
         "function": {
-            "name": "get_apps",
-            "description": "Retrieve all apps on the device, paired with open_app.",
+            "name": "tap_coordinates",
+            "description": "Tap at specific screen coordinates. Use this when you need to tap on visual elements not in the UI tree, or when index-based tap fails. Coordinates are in pixels.",
             "parameters": {
                 "type": "object",
-                "properties": {},
+                "properties": {
+                    "x": {
+                        "type": "integer",
+                        "description": "X coordinate (horizontal position from left edge)."
+                    },
+                    "y": {
+                        "type": "integer",
+                        "description": "Y coordinate (vertical position from top edge)."
+                    }
+                },
+                "required": ["x", "y"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "long_press",
+            "description": "Long press on an element or coordinates. Use for context menus, drag operations, or hold actions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "index": {
+                        "type": "integer",
+                        "description": "Index of the element to long press. Either index OR x/y coordinates required."
+                    },
+                    "x": {
+                        "type": "integer",
+                        "description": "X coordinate for long press."
+                    },
+                    "y": {
+                        "type": "integer",
+                        "description": "Y coordinate for long press."
+                    },
+                    "duration_ms": {
+                        "type": "integer",
+                        "description": "Duration of the press in milliseconds. Default is 1000ms (1 second)."
+                    }
+                },
                 "required": []
             }
         }
@@ -60,14 +108,51 @@
     {
         "type": "function",
         "function": {
-            "name": "edit_textbox",
-            "description": "Find any textbox on the screen, clear it, and enter new text.",
+            "name": "double_tap",
+            "description": "Double tap on an element or coordinates. Use for zoom, select word, or special double-tap actions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "index": {
+                        "type": "integer",
+                        "description": "Index of the element to double tap."
+                    },
+                    "x": {
+                        "type": "integer",
+                        "description": "X coordinate for double tap."
+                    },
+                    "y": {
+                        "type": "integer",
+                        "description": "Y coordinate for double tap."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "type_text",
+            "description": "Type text into a text field. Can target a specific field by index, or type into the currently focused field.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "text": {
                         "type": "string",
-                        "description": "New text to enter in the textbox."
+                        "description": "The text to type."
+                    },
+                    "target_index": {
+                        "type": "integer",
+                        "description": "Index of the text field to type into. If not provided, types into the first EditText or currently focused field."
+                    },
+                    "clear_first": {
+                        "type": "boolean",
+                        "description": "Whether to clear existing text before typing. Default is true."
+                    },
+                    "submit": {
+                        "type": "boolean",
+                        "description": "Whether to press Enter/Submit after typing. Default is false."
                     }
                 },
                 "required": ["text"]
@@ -77,12 +162,82 @@
     {
         "type": "function",
         "function": {
-            "name": "press_enter",
-            "description": "press enter on the device, should be used after entering text in textbox",
+            "name": "scroll",
+            "description": "Scroll the screen in a specified direction with controllable distance.",
             "parameters": {
                 "type": "object",
-                "properties": {},
-                "required": []
+                "properties": {
+                    "direction": {
+                        "type": "string",
+                        "enum": ["up", "down", "left", "right"],
+                        "description": "Direction to scroll. 'down' reveals content below, 'up' reveals content above."
+                    },
+                    "amount": {
+                        "type": "string",
+                        "enum": ["small", "medium", "large", "full_page"],
+                        "description": "How much to scroll. small=25%, medium=50%, large=75%, full_page=90% of screen. Default is medium."
+                    },
+                    "start_x": {
+                        "type": "integer",
+                        "description": "Optional X coordinate to start scroll from. Useful for scrolling specific areas like sidebars."
+                    },
+                    "start_y": {
+                        "type": "integer",
+                        "description": "Optional Y coordinate to start scroll from."
+                    }
+                },
+                "required": ["direction"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "swipe",
+            "description": "Perform a swipe gesture from one point to another. Use for dismissing, revealing panels, or precise gestures.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_x": {
+                        "type": "integer",
+                        "description": "Starting X coordinate."
+                    },
+                    "start_y": {
+                        "type": "integer",
+                        "description": "Starting Y coordinate."
+                    },
+                    "end_x": {
+                        "type": "integer",
+                        "description": "Ending X coordinate."
+                    },
+                    "end_y": {
+                        "type": "integer",
+                        "description": "Ending Y coordinate."
+                    },
+                    "duration_ms": {
+                        "type": "integer",
+                        "description": "Duration of swipe in milliseconds. Slower = more precise. Default is 500ms."
+                    }
+                },
+                "required": ["start_x", "start_y", "end_x", "end_y"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "press_key",
+            "description": "Press a system key on the device.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "enum": ["enter", "back", "home", "recent_apps", "volume_up", "volume_down", "power", "delete", "tab"],
+                        "description": "The key to press."
+                    }
+                },
+                "required": ["key"]
             }
         }
     },
@@ -90,13 +245,13 @@
         "type": "function",
         "function": {
             "name": "open_app",
-            "description": "Opens an app with the app name, has to run get_app before running this function.",
+            "description": "Open an application by package name or common name.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "app": {
                         "type": "string",
-                        "description": "app that needs to be opened"
+                        "description": "App package name (e.g., 'com.android.chrome') or common name (e.g., 'Chrome', 'YouTube', 'Settings')."
                     }
                 },
                 "required": ["app"]
@@ -106,8 +261,25 @@
     {
         "type": "function",
         "function": {
-            "name": "scroll_up",
-            "description": "Scroll up the screen.",
+            "name": "get_installed_apps",
+            "description": "Get a list of all installed applications on the device.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "include_system": {
+                        "type": "boolean",
+                        "description": "Include system apps in the list. Default is false (only user-installed apps)."
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_device_info",
+            "description": "Get information about the device and current screen state.",
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -118,23 +290,20 @@
     {
         "type": "function",
         "function": {
-            "name": "scroll_down",
-            "description": "Scroll down the screen.",
+            "name": "wait",
+            "description": "Wait for a specified duration. Use when expecting screen changes, loading, or animations.",
             "parameters": {
                 "type": "object",
-                "properties": {},
-                "required": []
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "go_back",
-            "description": "Navigate back to the previous screen.",
-            "parameters": {
-                "type": "object",
-                "properties": {},
+                "properties": {
+                    "seconds": {
+                        "type": "number",
+                        "description": "Number of seconds to wait. Default is 1 second."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Optional reason for waiting (for logging purposes)."
+                    }
+                },
                 "required": []
             }
         }

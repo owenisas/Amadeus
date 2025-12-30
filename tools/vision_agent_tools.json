@@ -1,0 +1,307 @@
+[
+    {
+        "type": "function",
+        "function": {
+            "name": "observe_screen",
+            "description": "Take a screenshot and get a detailed visual analysis of the current screen. This is your primary way to understand what's on screen. The analysis will describe visible elements, their approximate positions, and any text content.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "focus": {
+                        "type": "string",
+                        "description": "Optional: What to focus on in the analysis. E.g., 'buttons', 'text fields', 'the search bar', 'navigation elements'"
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "find_element",
+            "description": "Find a specific UI element on screen and get its coordinates. Use this when you need to locate a button, text, icon, or any visual element to interact with.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the element to find. Be specific: 'the blue Send button', 'search text field at top', 'hamburger menu icon', 'the word Settings'"
+                    },
+                    "return_multiple": {
+                        "type": "boolean",
+                        "description": "If true, return coordinates for all matching elements. Default is false (returns first/best match)."
+                    }
+                },
+                "required": ["description"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "find_text",
+            "description": "Find specific text on the screen and get its coordinates. Use OCR to locate exact text strings.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "The exact text to find on screen."
+                    },
+                    "partial_match": {
+                        "type": "boolean",
+                        "description": "If true, match partial text. Default is false (exact match)."
+                    }
+                },
+                "required": ["text"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "tap_at",
+            "description": "Tap at specific screen coordinates. Use after finding an element's position with find_element or find_text.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x": {
+                        "type": "integer",
+                        "description": "X coordinate (pixels from left edge)."
+                    },
+                    "y": {
+                        "type": "integer",
+                        "description": "Y coordinate (pixels from top edge)."
+                    }
+                },
+                "required": ["x", "y"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "tap_element",
+            "description": "Find and tap on a UI element in one action. Combines find_element + tap_at for convenience.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the element to tap. Be specific: 'the Submit button', 'Settings icon', 'first search result'"
+                    }
+                },
+                "required": ["description"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "tap_text",
+            "description": "Find and tap on specific text in one action. Combines find_text + tap_at for convenience.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "The text to find and tap on."
+                    }
+                },
+                "required": ["text"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "double_tap_at",
+            "description": "Double tap at specific screen coordinates.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x": {
+                        "type": "integer",
+                        "description": "X coordinate."
+                    },
+                    "y": {
+                        "type": "integer",
+                        "description": "Y coordinate."
+                    }
+                },
+                "required": ["x", "y"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "long_press_at",
+            "description": "Long press at specific screen coordinates.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x": {
+                        "type": "integer",
+                        "description": "X coordinate."
+                    },
+                    "y": {
+                        "type": "integer",
+                        "description": "Y coordinate."
+                    },
+                    "duration_ms": {
+                        "type": "integer",
+                        "description": "Duration in milliseconds. Default is 1000ms."
+                    }
+                },
+                "required": ["x", "y"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "type_text",
+            "description": "Type text. First tap on a text field using tap_element or tap_at, then use this to enter text.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "Text to type."
+                    },
+                    "clear_first": {
+                        "type": "boolean",
+                        "description": "Clear existing text first. Default is true."
+                    },
+                    "submit": {
+                        "type": "boolean",
+                        "description": "Press Enter after typing. Default is false."
+                    }
+                },
+                "required": ["text"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "scroll",
+            "description": "Scroll the screen in a direction.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "direction": {
+                        "type": "string",
+                        "enum": ["up", "down", "left", "right"],
+                        "description": "Direction to scroll. 'down' reveals content below, 'up' reveals content above."
+                    },
+                    "amount": {
+                        "type": "string",
+                        "enum": ["small", "medium", "large", "full_page"],
+                        "description": "Scroll distance. Default is medium."
+                    }
+                },
+                "required": ["direction"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "swipe",
+            "description": "Swipe from one point to another.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_x": {
+                        "type": "integer",
+                        "description": "Starting X coordinate."
+                    },
+                    "start_y": {
+                        "type": "integer",
+                        "description": "Starting Y coordinate."
+                    },
+                    "end_x": {
+                        "type": "integer",
+                        "description": "Ending X coordinate."
+                    },
+                    "end_y": {
+                        "type": "integer",
+                        "description": "Ending Y coordinate."
+                    },
+                    "duration_ms": {
+                        "type": "integer",
+                        "description": "Swipe duration in ms. Default is 500."
+                    }
+                },
+                "required": ["start_x", "start_y", "end_x", "end_y"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "press_key",
+            "description": "Press a system key.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "enum": ["enter", "back", "home", "recent_apps", "volume_up", "volume_down", "delete", "tab"],
+                        "description": "The key to press."
+                    }
+                },
+                "required": ["key"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "open_app",
+            "description": "Open an application.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "app": {
+                        "type": "string",
+                        "description": "App name ('Chrome', 'YouTube', 'Settings') or package name."
+                    }
+                },
+                "required": ["app"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_screen_size",
+            "description": "Get the screen dimensions in pixels. Useful for calculating relative positions.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "wait",
+            "description": "Wait for a duration. Use when expecting loading or animations.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "seconds": {
+                        "type": "number",
+                        "description": "Seconds to wait. Default is 1."
+                    }
+                },
+                "required": []
+            }
+        }
+    }
+]
